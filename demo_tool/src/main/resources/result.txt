@@ -1,0 +1,85 @@
+package com.youzu.got.shared.configuration.excel
+
+import com.youzu.got.shared.asset.AssetPackage
+import com.youzu.got.shared.configuration.TemplateWithKey
+import com.youzu.util.GameConfig
+import com.youzu.util.GameConfigManager
+import com.youzu.util.excel.GotExcel
+
+class ActivityUnionBossTemplate : TemplateWithKey() {
+  override fun key(): String {
+    return "${id}_${singleDamageRank}"
+  }
+  // ID
+var id: Int = 0; private set
+// 活动名称
+var name: Int = 0; private set
+// 活动描述
+var desc: String = ""; private set
+// 捐献道具
+var donationItem: Int = 0; private set
+// 捐献等级、属性加成
+var donationLevel: ArrayList<Triple<Int, Int, Int>> = arrayListOf()
+// 冷却时间
+var coolTime: Int = 0; private set
+// 活动持续时间
+var continueTime: Int = 0; private set
+// 全盟达标伤害
+var unionDamage: Int = 0; private set
+// 全盟伤害达标奖励
+var unionDamageReward: ArrayList<Triple<Int, Int, Int>> = arrayListOf()
+// 关联boss兵量数据
+var bossData: Int = 0; private set
+// 捐献奖励
+var donationReward: ArrayList<Triple<Int, Int, Int>> = arrayListOf()
+// 个人伤害档位
+var singleDamageRank: Int = 0; private set
+// 伤害数值区间
+lateinit var singleDamageNum: IntArray; private set
+
+  fun readRow(row: GotExcel.Row, manager: GameConfigManager) {
+    id = row.readInt("id")
+name = row.readInt("name")
+desc = row.readString("desc")
+donationItem = row.readInt("donation_item")
+row.readVector3ArrayInt("donation_level").forEach { (level, param, value) ->
+      donationLevel.add(Triple(level, param, value))
+    }
+coolTime = row.readInt("cool_time")
+continueTime = row.readInt("continue_time")
+unionDamage = row.readInt("union_damage")
+unionDamageReward = row.readAssetPackage(listOf("union_damage_reward"), manager)
+bossData = row.readInt("boss_data")
+donationReward = row.readAssetPackage(listOf("donation_reward"), manager)
+singleDamageRank = row.readInt("single_damage_rank")
+singleDamageNum = row.readIntArray("single_damage_num")
+
+  }
+}
+
+class ActivityUnionBossConfig : GameConfig() {
+  override fun allKeys(): Set<String> {
+    return templateKeys
+  }
+
+  private val templateKeys = hashSetOf<String>()
+  private val datas: HashMap<Int, ArrayList<ActivityUnionBossTemplate>> = hashMapOf()
+  override fun load() {
+    GotExcel.parse("excel/activity_union_boss.csv") { excel ->
+      excel.forEachRow(0) { index, row ->
+        if (index < 2) return@forEachRow
+        ActivityUnionBossTemplate().apply {
+          readRow(row, manager)
+          datas.getOrPut(id) { arrayListOf() }.add(this)
+          templateKeys.add(this.fullKey())
+        }
+      }
+    }
+  }
+
+  override fun afterLoadAll() {
+  }
+
+  fun getDataByKey(mainKey: Int) = datas[mainKey]
+}
+
