@@ -1,0 +1,62 @@
+package com.youzu.got.home.dc
+
+import com.alibaba.fastjson.JSON
+import com.google.common.collect.Maps
+import com.youzu.got.home.AbstractDataContainer
+import com.youzu.got.shared.isSameDay
+import com.youzu.got.shared.persistence.${entityName}Entity
+import com.youzu.util.CommonDao
+import com.youzu.util.DataContainerRepo
+import com.youzu.util.annotation.NoArgConstructor
+import com.youzu.util.listNoDup
+import com.youzu.util.memodb.ExpandableEntityWrapper
+import java.time.Duration
+import java.time.Instant
+import kotlin.collections.HashMap
+
+/**
+ * ${noteEntity}信息存储器
+ */
+class ${entityName}DC : AbstractDataContainer<List<${entityName}Entity>>() {
+
+  private val dataMap: HashMap<Int, ${entityName}> = Maps.newHashMap()
+
+  override fun initImpl(data: List<${entityName}Entity>?, depDCRepo: DataContainerRepo) {
+    data?.forEach { entity ->
+      wdb.recover(${entityName}::class.java, entity).let {
+        dataMap[entity.${keyField1}] = it
+      }
+    }
+  }
+
+  override fun loadAllFromDB(playerId: Long, dao: CommonDao): List<${entityName}Entity> =
+    dao.query { session ->
+      session.getNamedQuery("find${entityName}ByPlayerId").setLong("playerId", playerId).listNoDup()
+    }
+
+  fun getOrCreate(${keyField1}: Int): ${entityName} {
+    var common = dataMap[${keyField1}]
+    if (common == null) {
+      val entity = ${entityName}Entity(${keyField0}, ${keyField1})
+      common = wdb.save(${entityName}::class.java, entity).apply {
+        dataMap[${key1}] = this
+      }
+    }
+    return common
+  }
+}
+
+@NoArgConstructor
+data class ${entityName}(
+  public override var entity: ${entityName}Entity
+) : ExpandableEntityWrapper<${entityName}Entity>() {
+
+  override fun expand(e: ${entityName}Entity) {
+  }
+  override fun copyEntity(): ${entityName}Entity = entity.copy()
+
+  override fun collapse(e: ${entityName}Entity) {
+  }
+
+  override fun getCheckModInterval(): Duration = Duration.ofSeconds(60L)
+}

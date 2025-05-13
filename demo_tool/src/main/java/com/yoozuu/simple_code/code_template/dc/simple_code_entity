@@ -1,0 +1,23 @@
+/**
+ * ${noteEntity}
+ */
+@NoArgConstructor
+data class ${entityName}Pk(
+  ${pkParams}
+) : PlayerAsset {
+  override fun primaryKey() : Serializable = this
+}
+@NamedQueries(
+  NamedQuery(
+    name = "find${entityName}ByPlayerId",
+    query = "from ${entityName}Entity where playerId=:playerId"
+  )
+)
+@Entity
+@Table(name = "${tableName}")
+@IdClass(${entityName}Pk::class)
+data class ${entityName}Entity(
+  ${entityParams}
+) : PlayerAsset {
+  override fun primaryKey() = ${entityName}Pk(${keyField0}, ${keyField1})
+}
