@@ -1,0 +1,5 @@
+CREATE TABLE `${tableName}` (
+  `${key0}` bigint(20) NOT NULL COMMENT 'x',
+  `${key1}` int(11) NOT NULL COMMENT 'x',
+  PRIMARY KEY (`${key0}`,`${key1}`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
