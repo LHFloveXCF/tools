@@ -1,0 +1,43 @@
+package com.youzu.got.shared.configuration.excel
+
+import com.youzu.got.shared.asset.AssetPackage
+import com.youzu.got.shared.configuration.TemplateWithKey
+import com.youzu.util.GameConfig
+import com.youzu.util.GameConfigManager
+import com.youzu.util.excel.GotExcel
+
+class ${configName}Template : TemplateWithKey() {
+  override fun key(): String {
+    return "${mainKeyStr}"
+  }
+  ${paramList}
+  fun readRow(row: GotExcel.Row, manager: GameConfigManager) {
+    ${paramRead}
+  }
+}
+
+class ${configName}Config : GameConfig() {
+  override fun allKeys(): Set<String> {
+    return templateKeys
+  }
+
+  private val templateKeys = hashSetOf<String>()
+  private val datas: HashMap<Int, ${configName}Template> = hashMapOf()
+  override fun load() {
+    GotExcel.parse("excel/${configName2}.csv") { excel ->
+      excel.forEachRow(0) { index, row ->
+        if (index < 2) return@forEachRow
+        ${configName}Template().apply {
+          readRow(row, manager)
+          datas[${mainKey}] = this
+          templateKeys.add(this.fullKey())
+        }
+      }
+    }
+  }
+
+  override fun afterLoadAll() {
+  }
+
+  fun getDataByKey(mainKey: Int) = datas[mainKey]
+}
